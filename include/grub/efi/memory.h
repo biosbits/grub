@@ -24,6 +24,8 @@
 
 #define GRUB_MMAP_REGISTER_BY_FIRMWARE  1
 
+#define GRUB_MMAP_MALLOC_LOW 1
+
 grub_err_t grub_machine_mmap_register (grub_uint64_t start, grub_uint64_t size,
 				       int type, int handle);
 grub_err_t grub_machine_mmap_unregister (int handle);

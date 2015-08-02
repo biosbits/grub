@@ -238,9 +238,9 @@ void *
 grub_mmap_malign_and_register (grub_uint64_t align __attribute__ ((unused)),
 			       grub_uint64_t size,
 			       int *handle, int type,
-			       int flags __attribute__ ((unused)))
+			       int flags)
 {
-  grub_efi_physical_address_t address;
+  grub_efi_physical_address_t address, max_address;
   grub_efi_boot_services_t *b;
   grub_efi_uintn_t pages;
   grub_efi_status_t status;
@@ -253,13 +253,18 @@ grub_mmap_malign_and_register (grub_uint64_t align __attribute__ ((unused)),
 
   b = grub_efi_system_table->boot_services;
 
-  address = 0xffffffff;
+  if (flags & GRUB_MMAP_MALLOC_LOW)
+      max_address = 0xfffff;
+  else
+      max_address = 0xffffffff;
+  address = max_address;
 
 #if GRUB_TARGET_SIZEOF_VOID_P < 8
   /* Limit the memory access to less than 4GB for 32-bit platforms.  */
   atype = GRUB_EFI_ALLOCATE_MAX_ADDRESS;
 #else
-  atype = GRUB_EFI_ALLOCATE_ANY_PAGES;
+  atype = (flags & GRUB_MMAP_MALLOC_LOW) ? GRUB_EFI_ALLOCATE_MAX_ADDRESS
+                                         : GRUB_EFI_ALLOCATE_ANY_PAGES;
 #endif
 
   pages = (size + 0xfff) >> 12;
@@ -275,7 +280,7 @@ grub_mmap_malign_and_register (grub_uint64_t align __attribute__ ((unused)),
     {
       /* Uggh, the address 0 was allocated... This is too annoying,
 	 so reallocate another one.  */
-      address = 0xffffffff;
+      address = max_address;
       status = efi_call_4 (b->allocate_pages, atype,
 			   make_efi_memtype (type), pages, &address);
       grub_efi_free_pages (0, pages);
