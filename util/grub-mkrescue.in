@@ -96,6 +96,8 @@ argument () {
   echo $1
 }
 
+system_area=auto
+
 # Check the arguments.
 while test $# -gt 0
 do
@@ -205,9 +207,7 @@ make_image ()
 
     gettext_printf "Enabling %s support ...\n" "$2"
 
-    memdisk_img="`mktemp "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`" || exit 1
-    memdisk_dir="`mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`" || exit 1
-    mkdir -p "${memdisk_dir}/boot/grub"
+    load_cfg="`mktemp "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`"
 
     (cat << EOF
 search --fs-uuid --set=root ${iso_uuid}
@@ -215,18 +215,34 @@ set prefix=(\${root})/boot/grub
 EOF
     for i in $(cat "${source_directory}/partmap.lst") ${modules} ; do
         echo "insmod $i"
-    done ; \
-    echo "source \$prefix/grub.cfg") \
-    > "${memdisk_dir}/boot/grub/grub.cfg"
+    done ; ) > "${load_cfg}"
 
-    (cd "${memdisk_dir}"; tar -cf - boot) > "${memdisk_img}"
-    rm -rf "${memdisk_dir}"
-    "$grub_mkimage" -O ${platform} -d "${source_directory}" -m "${memdisk_img}" -o "$3" --prefix='(memdisk)/boot/grub' \
-        search iso9660 configfile normal memdisk tar $4
-    rm -rf "${memdisk_img}"
+    "$grub_mkimage" -O ${platform} -d "${source_directory}" -c "${load_cfg}" -o "$3" \
+        search iso9660 $4
+    rm -rf "${load_cfg}"
+}
+
+make_image_fwdisk ()
+{
+    source_directory="$1"
+    platform=$2
+    if ! test -e "${source_directory}"; then
+	return;
+    fi
+
+    gettext_printf "Enabling %s support ...\n" "$2"
+
+    "$grub_mkimage" -O ${platform} -d "${source_directory}" -p '()/boot/grub' -o "$3" \
+        iso9660 $4
 }
 
 if [ "${override_dir}" = "" ] ; then
+    if [ "$system_area" = auto ]; then
+	if test -e "${pc_dir}" || test -e "${ppc_dir}" \
+	    || test -e "${efi32_dir}" || test -e "${efi64_dir}"; then 
+	    system_area=common;
+	fi
+    fi
     if test -e "${multiboot_dir}" ; then
         process_input_dir "${multiboot_dir}" i386-multiboot
     fi
@@ -274,9 +290,9 @@ else
         i386-multiboot) multiboot_dir="${override_dir}" ;;
         i386-coreboot) coreboot_dir="${override_dir}" ;;
         i386-qemu) qemu_dir="${override_dir}" ;;
-        i386-pc) pc_dir="${override_dir}" ;;
-	i386-efi) efi32_dir="${override_dir}" ;;
-	x86_64-efi) efi64_dir="${override_dir}" ;;
+        i386-pc) pc_dir="${override_dir}"; system_area=common;;
+	i386-efi) efi32_dir="${override_dir}"; system_area=common ;;
+	x86_64-efi) efi64_dir="${override_dir}"; system_area=common ;;
 	ia64-efi) ia64_dir="${override_dir}" ;;
 	mipsel-qemu_mips) mipsel_qemu_dir="${override_dir}" ;;
 	mipsel-loongson) loongson_dir="${override_dir}" ;;
@@ -302,13 +318,25 @@ if test -e "${pc_dir}" ; then
         iso9660 biosdisk
     cat "${pc_dir}/cdboot.img" "${core_img}" > "${iso9660_dir}/boot/grub/i386-pc/eltorito.img"
 
-    embed_img="`mktemp "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`" || exit 1
-    cat "${pc_dir}/boot.img" "${core_img}" > "${embed_img}"
+    grub_mkisofs_arguments="${grub_mkisofs_arguments} -b boot/grub/i386-pc/eltorito.img -no-emul-boot -boot-load-size 4 -boot-info-table"
+    if [ "$system_area" = common ]; then
+	if "${xorriso}" -as mkisofs -help 2>&1 | fgrep "grub2-boot-info" >/dev/null; then
+	    grub_mkisofs_arguments="${grub_mkisofs_arguments} --grub2-boot-info --grub2-mbr ${pc_dir}/boot_hybrid.img"
+	else
+	    gettext "Your xorriso doesn't support \`--grub2-boot-info'. Some features are disabled. Please use xorriso 1.2.9 or later."
+	    echo
+	    sysarea_img="`mktemp "${TMPDIR:-/tmp}/tmp.XXXXXXXXXX"`" || exit 1
+	    cat "${pc_dir}/boot.img" "${core_img}" > "${sysarea_img}"
+	    if [ "$(wc -c "${sysarea_img}" | awk '{ print $1; }')" -gt 32768 ]; then
+		gettext "Your xorriso doesn't support \`--grub2-boot-info'. Your core image is too big. Boot as disk is disabled. Please use xorriso 1.2.9 or later."
+		echo
+	    else
+		grub_mkisofs_arguments="${grub_mkisofs_arguments} -G ${sysarea_img}"
+	    fi
+	fi
+    fi
 
     rm -f "${core_img}"
-
-    grub_mkisofs_arguments="${grub_mkisofs_arguments} -b boot/grub/i386-pc/eltorito.img -no-emul-boot -boot-info-table \
-		--embedded-boot ${embed_img}"
 fi
 
 # build multiboot core.img
@@ -332,7 +360,7 @@ if test -e "${efi64_dir}" || test -e "${efi32_dir}" || test -e "${ia64_dir}"; th
     mformat -C -f 2880 -L 16 -i "${iso9660_dir}"/efi.img ::
     mcopy -s -i "${iso9660_dir}"/efi.img ${efi_dir}/efi ::/
     rm -rf ${efi_dir}
-    grub_mkisofs_arguments="${grub_mkisofs_arguments} --efi-boot efi.img"
+    grub_mkisofs_arguments="${grub_mkisofs_arguments} --efi-boot efi.img -efi-boot-part --efi-boot-image"
 fi
 
 make_image "${mipsel_qemu_dir}" mipsel-qemu_mips-elf "${iso9660_dir}/boot/mipsel-qemu_mips.elf" "pata"
@@ -371,6 +399,6 @@ fi
 "${xorriso}" -as mkisofs -graft-points ${grub_mkisofs_arguments} --protective-msdos-label -o "${output_image}" -r "${iso9660_dir}" --sort-weight 0 / --sort-weight 1 /boot ${source}
 rm -rf "${iso9660_dir}"
 
-rm -f "${embed_img}"
+rm -f "${sysarea_img}"
 
 exit 0
