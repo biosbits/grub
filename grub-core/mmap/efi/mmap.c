@@ -145,7 +145,7 @@ make_efi_memtype (int type)
       return GRUB_EFI_UNUSABLE_MEMORY;
 
     case GRUB_MEMORY_AVAILABLE:
-      return GRUB_EFI_CONVENTIONAL_MEMORY;
+      return GRUB_EFI_LOADER_CODE;
 
     case GRUB_MEMORY_ACPI:
       return GRUB_EFI_ACPI_RECLAIM_MEMORY;
