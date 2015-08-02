@@ -736,6 +736,12 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
       if (c != '%')
 	continue;
 
+      if (*fmt && *fmt == '%')
+	{
+	  fmt++;
+	  continue;
+	}
+
       curn = n++;
 
       if (*fmt && *fmt =='-')
@@ -838,6 +844,13 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
       if (c != '%')
 	{
 	  write_char (c);
+	  continue;
+	}
+
+      if (*fmt && *fmt == '%')
+	{
+	  write_char ('%');
+	  fmt++;
 	  continue;
 	}
 
