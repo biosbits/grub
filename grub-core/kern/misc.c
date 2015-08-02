@@ -673,8 +673,16 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
       if (*fmt && *fmt =='-')
 	fmt++;
 
-      while (*fmt && grub_isdigit (*fmt))
-	fmt++;
+      if (*fmt && *fmt == '*')
+	{
+	  fmt++;
+	  count_args++;
+	}
+      else
+	{
+	  while (*fmt && grub_isdigit (*fmt))
+	    fmt++;
+	}
 
       if (*fmt && *fmt == '$')
 	fmt++;
@@ -686,10 +694,20 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
 	fmt++;
 
       if (*fmt && *fmt =='.')
-	fmt++;
+	{
+	  fmt++;
 
-      while (*fmt && grub_isdigit (*fmt))
-	fmt++;
+	  if (*fmt && *fmt == '*')
+	    {
+	      fmt++;
+	      count_args++;
+	    }
+	  else
+	    {
+	      while (*fmt && grub_isdigit (*fmt))
+		fmt++;
+	    }
+	}
 
       c = *fmt++;
       if (c == 'l')
@@ -748,14 +766,34 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
       if (*fmt && *fmt =='-')
 	fmt++;
 
-      while (*fmt && grub_isdigit (*fmt))
-	fmt++;
+      if (*fmt && *fmt == '*')
+	{
+	  types[curn] = INT;
+	  curn = n++;
+	  fmt++;
+	}
+      else
+	{
+	  while (*fmt && grub_isdigit (*fmt))
+	    fmt++;
+	}
 
       if (*fmt && *fmt =='.')
+      {
 	fmt++;
 
-      while (*fmt && grub_isdigit (*fmt))
-	fmt++;
+	if (*fmt && *fmt == '*')
+	  {
+	    types[curn] = INT;
+	    curn = n++;
+	    fmt++;
+	  }
+	else
+	  {
+	    while (*fmt && grub_isdigit (*fmt))
+	      fmt++;
+	  }
+      }
 
       p = fmt;
 
@@ -868,34 +906,54 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
 
       p = (char *) fmt;
       /* Read formatting parameters.  */
-      while (*p && grub_isdigit (*p))
-	p++;
-
-      if (p > fmt)
+      if (*fmt && *fmt == '*')
 	{
-	  char s[p - fmt + 1];
-	  grub_strncpy (s, fmt, p - fmt);
-	  s[p - fmt] = 0;
-	  if (s[0] == '0')
-	    zerofill = '0';
-	  format1 = grub_strtoul (s, 0, 10);
-	  fmt = p;
+	  format1 = args[curn].i;
+	  curn = n++;
+	  p++;
+	  fmt++;
+	}
+      else
+	{
+	  while (*p && grub_isdigit (*p))
+	    p++;
+
+	  if (p > fmt)
+	    {
+	      char s[p - fmt + 1];
+	      grub_strncpy (s, fmt, p - fmt);
+	      s[p - fmt] = 0;
+	      if (s[0] == '0')
+		zerofill = '0';
+	      format1 = grub_strtoul (s, 0, 10);
+	      fmt = p;
+	    }
 	}
 
       if (*p && *p == '.')
 	{
 	  p++;
 	  fmt++;
-	  while (*p && grub_isdigit (*p))
-	    p++;
-
-	  if (p > fmt)
+	  if (*fmt && *fmt == '*')
 	    {
-	      char fstr[p - fmt + 1];
-	      grub_strncpy (fstr, fmt, p - fmt);
-	      fstr[p - fmt] = 0;
-	      format2 = grub_strtoul (fstr, 0, 10);
-	      fmt = p;
+	      format2 = args[curn].i;
+	      curn = n++;
+	      p++;
+	      fmt++;
+	    }
+	  else
+	    {
+	      while (*p && grub_isdigit (*p))
+		p++;
+
+	      if (p > fmt)
+		{
+		  char fstr[p - fmt + 1];
+		  grub_strncpy (fstr, fmt, p - fmt);
+		  fstr[p - fmt] = 0;
+		  format2 = grub_strtoul (fstr, 0, 10);
+		  fmt = p;
+		}
 	    }
 	}
       if (*fmt == '$')
