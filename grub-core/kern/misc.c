@@ -701,6 +701,7 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
       switch (c)
 	{
 	case 'p':
+	case 'X':
 	case 'x':
 	case 'u':
 	case 'd':
@@ -782,6 +783,7 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
 	continue;
       switch (c)
 	{
+	case 'X':
 	case 'x':
 	case 'u':
 	case 'd':
@@ -927,8 +929,10 @@ grub_vsnprintf_real (char *str, grub_size_t max_len, const char *fmt0, va_list a
 	{
 	case 'p':
 	  write_str ("0x");
-	  c = 'x';
 	  longlongfmt |= (sizeof (void *) == sizeof (long long));
+	  /* Fall through. */
+	case 'X':
+	  c = 'x';
 	  /* Fall through. */
 	case 'x':
 	case 'u':
