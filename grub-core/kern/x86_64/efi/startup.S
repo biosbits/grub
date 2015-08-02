@@ -29,7 +29,11 @@ start:
 _start:
 	movq	%rcx, EXT_C(grub_efi_image_handle)(%rip)
 	movq	%rdx, EXT_C(grub_efi_system_table)(%rip)
-
+	mov	%rsp, %rax
+	subq	$8, %rsp
+	and	$~0xf, %rsp
+	mov	%rax, (%rsp)
 	call	EXT_C(grub_main)
+	mov	(%rsp), %rsp
 	ret
 
