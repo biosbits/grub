@@ -486,6 +486,7 @@ SUFFIX (relocate_addresses) (Elf_Ehdr *e, Elf_Shdr *sections,
 									    + sym->st_value
 									    - image_target->vaddr_offset));
 		  }
+		  // fall through
 		case R_IA64_LTOFF_FPTR22:
 		  *gpptr = grub_host_to_target64 (addend + sym_addr);
 		  add_value_to_slot_21 ((grub_addr_t) target,

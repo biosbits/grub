@@ -1297,6 +1297,7 @@ blit_comb (const struct grub_unicode_glyph *glyph_id,
 	    - grub_font_get_xheight (combining_glyphs[i]->font) - 1;
 	  if (space <= 0)
 	    space = 1 + (grub_font_get_xheight (main_glyph->font)) / 8;
+	  // fall through
 
 	case GRUB_UNICODE_STACK_ATTACHED_ABOVE:
 	  do_blit (combining_glyphs[i], targetx,
@@ -1338,6 +1339,7 @@ blit_comb (const struct grub_unicode_glyph *glyph_id,
 		    + combining_glyphs[i]->height);
 	  if (space <= 0)
 	    space = 1 + (grub_font_get_xheight (main_glyph->font)) / 8;
+	  // fall through
 
 	case GRUB_UNICODE_STACK_ATTACHED_BELOW:
 	  do_blit (combining_glyphs[i], targetx, -(bounds.y - space));

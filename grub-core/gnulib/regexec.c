@@ -4104,8 +4104,8 @@ check_node_accept (const re_match_context_t *mctx, const re_token_t *node,
     case OP_UTF8_PERIOD:
       if (ch >= ASCII_CHARS)
         return false;
-      /* FALLTHROUGH */
 #endif
+      // fall through
     case OP_PERIOD:
       if ((ch == '\n' && !(mctx->dfa->syntax & RE_DOT_NEWLINE))
 	  || (ch == '\0' && (mctx->dfa->syntax & RE_DOT_NOT_NULL)))

@@ -626,6 +626,7 @@ grub_legacy_parse (const char *buf, char **entryname, char **suffix)
 	  {
 	  case TYPE_FILE_NO_CONSUME:
 	    hold_arg = 1;
+	    // fall through
 	  case TYPE_PARTITION:
 	  case TYPE_FILE:
 	    args[i] = adjust_file (curarg, curarglen);
