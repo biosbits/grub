@@ -31,6 +31,7 @@
 #pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-value"
 
 #define yyfree    grub_lexer_yyfree
 #define yyalloc   grub_lexer_yyalloc
