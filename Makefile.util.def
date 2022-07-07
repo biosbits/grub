@@ -157,6 +157,7 @@ program = {
   ldadd = '$(LIBLZMA)';
   ldadd = '$(LIBINTL) $(LIBDEVMAPPER) $(LIBZFS) $(LIBNVPAIR) $(LIBGEOM)';
   cppflags = '-DGRUB_PKGLIBDIR=\"$(pkglibdir)\"';
+  cflags = '-static';
 };
 
 program = {
