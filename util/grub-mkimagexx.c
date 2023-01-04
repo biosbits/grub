@@ -427,6 +427,7 @@ SUFFIX (relocate_addresses) (Elf_Ehdr *e, Elf_Shdr *sections,
 		  break;
 
 		case R_X86_64_PC32:
+		case R_X86_64_PLT32:
 		  {
 		    grub_uint32_t *t32 = (grub_uint32_t *) target;
 		    *t32 = grub_host_to_target64 (grub_target_to_host32 (*t32)
@@ -485,6 +486,7 @@ SUFFIX (relocate_addresses) (Elf_Ehdr *e, Elf_Shdr *sections,
 									    + sym->st_value
 									    - image_target->vaddr_offset));
 		  }
+		  // fall through
 		case R_IA64_LTOFF_FPTR22:
 		  *gpptr = grub_host_to_target64 (addend + sym_addr);
 		  add_value_to_slot_21 ((grub_addr_t) target,

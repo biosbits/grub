@@ -1189,7 +1189,7 @@ grub_abort (void)
 
 #if ! defined (__APPLE__) && !defined (GRUB_UTIL)
 /* GCC emits references to abort().  */
-void abort (void) __attribute__ ((alias ("grub_abort")));
+void  __attribute__ ((noreturn)) abort (void) __attribute__ ((alias ("grub_abort")));
 #endif
 
 #if NEED_ENABLE_EXECUTE_STACK && !defined(GRUB_UTIL) && !defined(GRUB_MACHINE_EMU)

@@ -431,6 +431,7 @@ grub_video_cirrus_setup (unsigned int width, unsigned int height,
     case 32:
       framebuffer.mode_info.reserved_mask_size = 8;
       framebuffer.mode_info.reserved_field_pos = 24;
+      // fall through
 
     case 24:
       framebuffer.mode_info.red_mask_size = 8;

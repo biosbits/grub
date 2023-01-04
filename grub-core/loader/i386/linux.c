@@ -977,10 +977,13 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
 	      {
 	      case 'g':
 		shift += 10;
+		// fall through
 	      case 'm':
 		shift += 10;
+		// fall through
 	      case 'k':
 		shift += 10;
+		// fall through
 	      default:
 		break;
 	      }

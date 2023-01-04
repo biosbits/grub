@@ -28,6 +28,7 @@
 #include <grub/time.h>
 #include <grub/loader.h>
 #include <grub/cs5536.h>
+#include <grub/err.h>
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
@@ -1259,7 +1260,7 @@ grub_ehci_setup_transfer (grub_usb_controller_t dev,
   if ((transfer->dev->speed != GRUB_USB_SPEED_HIGH)
       && !transfer->dev->hubaddr)
     {
-      grub_error (GRUB_USB_ERR_BADDEVICE,
+      grub_error (GRUB_ERR_BAD_DEVICE,
 		  "FULL/LOW speed device on EHCI port!?!");
       return GRUB_USB_ERR_BADDEVICE;
     }
@@ -1719,7 +1720,7 @@ grub_ehci_portstatus (grub_usb_controller_t dev,
       /* FULL speed device connected - change port ownership.
        * It results in disconnected state of this EHCI port. */
       grub_ehci_port_setbits (e, port, GRUB_EHCI_PORT_OWNER);
-      return GRUB_USB_ERR_BADDEVICE;
+      return GRUB_ERR_BAD_DEVICE;
     }
 
   /* XXX: Fix it! There is possible problem - we can say to calling
@@ -1866,7 +1867,7 @@ grub_ehci_restore_hw (void)
 	}
     }
 
-  return GRUB_USB_ERR_NONE;
+  return GRUB_ERR_NONE;
 }
 
 static grub_err_t
@@ -1886,7 +1887,7 @@ grub_ehci_fini_hw (int noreturn __attribute__ ((unused)))
 	grub_error (GRUB_ERR_TIMEOUT, "restore_hw: EHCI reset timeout");
     }
 
-  return GRUB_USB_ERR_NONE;
+  return GRUB_ERR_NONE;
 }
 
 static struct grub_usb_controller_dev usb_controller = {

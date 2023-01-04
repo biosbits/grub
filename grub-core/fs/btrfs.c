@@ -28,6 +28,7 @@
 #include <grub/deflate.h>
 #include <minilzo.h>
 #include <grub/i18n.h>
+#include <string.h>
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
@@ -199,7 +200,7 @@ struct grub_btrfs_time
 {
   grub_int64_t sec;
   grub_uint32_t nanosec;
-} __attribute__ ((aligned (4)));
+} __attribute__ ((packed));
 
 struct grub_btrfs_inode
 {
@@ -252,10 +253,16 @@ static grub_err_t
 read_sblock (grub_disk_t disk, struct grub_btrfs_superblock *sb)
 {
   unsigned i;
+  struct grub_btrfs_superblock sblock;
   grub_err_t err = GRUB_ERR_NONE;
+  /* without this, the comiler will get confused. It will complain that
+   * on the first iteration of the loop below, we are accessing
+   * uninitialized sblock
+   */
+  memset(&sblock, 0, sizeof(struct grub_btrfs_superblock));
+
   for (i = 0; i < ARRAY_SIZE (superblock_sectors); i++)
     {
-      struct grub_btrfs_superblock sblock;
       /* Don't try additional superblocks beyond device size.  */
       if (i && (grub_le_to_cpu64 (sblock.this_device.size)
 		>> GRUB_DISK_SECTOR_BITS) <= superblock_sectors[i])

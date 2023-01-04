@@ -24,6 +24,12 @@
 #include <grub/cpu/types.h>
 #endif
 
+#ifdef __MINGW32__
+#define GRUB_PACKED __attribute__ ((packed,gcc_struct))
+#else
+#define GRUB_PACKED __attribute__ ((packed))
+#endif
+
 #ifdef GRUB_UTIL
 # define GRUB_CPU_SIZEOF_VOID_P	SIZEOF_VOID_P
 # define GRUB_CPU_SIZEOF_LONG	SIZEOF_LONG

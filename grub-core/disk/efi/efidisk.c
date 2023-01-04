@@ -262,6 +262,9 @@ name_devices (struct grub_efidisk_data *devices)
 	    {
 	    case GRUB_EFI_HARD_DRIVE_DEVICE_PATH_SUBTYPE:
 	      is_hard_drive = 1;
+#if defined(__GNUC__) && __GNUC__ >= 7
+	      __attribute__ ((fallthrough));
+#endif
 	      /* Fall through by intention.  */
 	    case GRUB_EFI_CDROM_DEVICE_PATH_SUBTYPE:
 	      {
